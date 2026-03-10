@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}My Cars - Car Owner{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>My Cars</h1>
+        <p>Manage your car listings</p>
+        <a href="{{ url_for('owner.add_car') }}" class="btn btn-primary">Add New Car</a>
+    </div>
+
+    {% if cars %}
+    <div class="cars-grid">
+        {% for car in cars %}
+        <div class="car-card">
+            <div class="car-image">
+                {% if car.image_path %}
+                <img src="{{ url_for('static', filename=car.image_path) }}" alt="{{ car.brand }} {{ car.model }}">
+                {% else %}
+                <div class="car-placeholder">🚗</div>
+                {% endif %}
+            </div>
+
+            <div class="car-content">
+                <h3>{{ car.brand }} {{ car.model }}</h3>
+                <p class="car-year">{{ car.year }}</p>
+                {% if car.registration %}
+                <p class="car-registration"><strong>Reg:</strong> {{ car.registration }}</p>
+                {% endif %}
+                <p class="car-price">₹{{ "%.2f"|format(car.price_per_day) }} / day</p>
+
+                <div class="car-status-badges">
+                    <span class="status-badge status-{{ car.approval_status }}">
+                        {{ car.approval_status }}
+                    </span>
+                    <span class="status-badge status-{{ car.status }}">
+                        {{ car.status }}
+                    </span>
+                </div>
+
+                {% if car.description %}
+                <p class="car-description">{{ car.description[:100] }}{% if car.description|length > 100 %}...{% endif
+                    %}</p>
+                {% endif %}
+
+                <div class="car-actions">
+                    <a href="{{ url_for('owner.edit_car', car_id=car.id) }}" class="btn btn-sm btn-outline">Edit</a>
+                    <form method="POST" action="{{ url_for('owner.delete_car', car_id=car.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this car? This action cannot be undone.');"><button type="submit" class="btn btn-sm btn-danger">Delete</button></form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-container">
+        <div class="empty-state-icon">🚗</div>
+        <h2>No cars yet</h2>
+        <p>Start by adding your first car!</p>
+        <a href="{{ url_for('owner.add_car') }}" class="btn btn-primary">Add Car</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

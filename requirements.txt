@@ -1,0 +1,6 @@
+Flask==3.0.0
+reportlab==3.6.13
+Pillow==10.1.0
+Werkzeug==3.0.1
+Flask-Mail==0.9.1
+python-dotenv>=0.21.0

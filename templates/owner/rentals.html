@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}My Rentals - Car Owner{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>Rentals of My Cars</h1>
+            <p>View rentals for your listed cars</p>
+        </div>
+        {% if rentals %}
+        <button class="btn btn-primary" onclick="toggleOwnerMapView()" style="margin-top: 1rem;">📍 View Map</button>
+        {% endif %}
+    </div>
+
+    <!-- Google Map View for Owner -->
+    {% if rentals %}
+    <div id="ownerMapContainer" style="display: none; margin-bottom: 2rem;">
+        <div id="ownerGoogleMap" style="width: 100%; height: 500px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); border: 1px solid #334155;"></div>
+        
+        <!-- Map Legend Card -->
+        <div style="position: relative; z-index: 10; margin-top: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 12px; border: 2px solid #fbbf24; box-shadow: 0 10px 20px -5px rgba(251, 188, 4, 0.3); backdrop-filter: blur(10px);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem;">📍</span>
+                    <h3 style="margin: 0; color: #f1f5f9; font-size: 1.1rem; font-weight: 700;">Legend - Your Car Rentals</h3>
+                </div>
+                <span style="font-size: 0.85rem; color: #cbd5e1; background: rgba(251, 188, 4, 0.2); padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid #fbbf24;">Click markers to view details</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem;">
+                <div style="display: flex; align-items: flex-start; padding: 1rem; background: rgba(66, 133, 244, 0.1); border-left: 4px solid #4285F4; border-radius: 8px; transition: all 0.3s ease;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem; min-width: 30px;">🔵</span>
+                    <div>
+                        <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #fff; font-size: 0.95rem;">ACTIVE Rental</p>
+                        <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">Your car is currently being rented by a customer.</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; padding: 1rem; background: rgba(52, 168, 83, 0.1); border-left: 4px solid #34A853; border-radius: 8px; transition: all 0.3s ease;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem; min-width: 30px;">🟢</span>
+                    <div>
+                        <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #fff; font-size: 0.95rem;">COMPLETED Rental</p>
+                        <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">Rental has finished successfully. Payment received.</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; padding: 1rem; background: rgba(234, 67, 53, 0.1); border-left: 4px solid #EA4335; border-radius: 8px; transition: all 0.3s ease;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem; min-width: 30px;">🔴</span>
+                    <div>
+                        <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #fff; font-size: 0.95rem;">PENDING Status</p>
+                        <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">Rental status is still pending. Awaiting updates.</p>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border-left: 3px solid #cbd5e1;">
+                <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem;">💡 <strong>Tip:</strong> Click any colored marker on the map above to see customer details including name, car information, rental dates, total price, and rental status.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if rentals %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Car</th>
+                    <th>Driver</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rental in rentals %}
+                <tr>
+                    <td>#{{ rental.id }}</td>
+                    <td>{{ rental.username }}</td>
+                    <td>{{ rental.brand }} {{ rental.model }}</td>
+                    <td>{{ rental.driver_name or 'N/A' }}</td>
+                    <td>{{ rental.start_date }}</td>
+                    <td>{{ rental.end_date }}</td>
+                    <td>₹{{ "%.2f"|format(rental.total_price) }}</td>
+                    <td><span class="status-badge status-{{ rental.status }}">{{ rental.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state-container">
+        <div class="empty-state-icon">📋</div>
+        <h2>No rentals yet</h2>
+        <p>Your cars haven't been rented yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Rental data for owner map markers
+const ownerRentals = [
+    {% for rental in rentals %}
+    {
+        id: {{ rental.id }},
+        customer: "{{ rental.username }}",
+        car: "{{ rental.brand }} {{ rental.model }}",
+        status: "{{ rental.status }}",
+        startDate: "{{ rental.start_date }}",
+        endDate: "{{ rental.end_date }}",
+        price: {{ rental.total_price }},
+        lat: {{ [28.7041, 28.7041 + loop.index * 0.002] | first }},
+        lng: {{ [77.1025, 77.1025 + loop.index * 0.002] | first }},
+        index: {{ loop.index }}
+    },
+    {% endfor %}
+];
+
+let ownerMap;
+
+function initOwnerMap() {
+    // Default center (Delhi, India)
+    const defaultCenter = { lat: 28.7041, lng: 77.1025 };
+    
+    ownerMap = new google.maps.Map(document.getElementById('ownerGoogleMap'), {
+        zoom: 12,
+        center: defaultCenter,
+        mapTypeId: 'roadmap'
+    });
+    
+    // Add markers for each rental
+    ownerRentals.forEach((rental, index) => {
+        const markerColor = getOwnerMarkerColor(rental.status);
+        const markerLabel = String(index + 1);
+        
+        const marker = new google.maps.Marker({
+            position: { lat: rental.lat, lng: rental.lng },
+            map: ownerMap,
+            title: `Rental #${rental.id}`,
+            icon: `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`,
+            label: {
+                text: markerLabel,
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 'bold'
+            }
+        });
+        
+        // Info window for marker
+        const infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="padding: 15px; font-family: Arial, sans-serif; font-size: 13px; max-width: 300px; color: #000;">
+                    <h4 style="margin: 0 0 10px 0; color: #000;">Rental #${rental.id}</h4>
+                    <div style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+                        <p style="margin: 5px 0; color: #000;"><strong>👤 Customer:</strong> ${rental.customer}</p>
+                        <p style="margin: 5px 0; color: #000;"><strong>🚗 Car:</strong> ${rental.car}</p>
+                        <p style="margin: 5px 0; color: #000;"><strong>📅 Start:</strong> ${rental.startDate}</p>
+                        <p style="margin: 5px 0; color: #000;"><strong>📅 End:</strong> ${rental.endDate}</p>
+                        <p style="margin: 5px 0; color: #000;"><strong>💰 Price:</strong> ₹${rental.price.toFixed(2)}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 5px 0; color: #000;"><strong>Status:</strong> <span style="color: ${getOwnerStatusColor(rental.status)}">${rental.status.toUpperCase()}</span></p>
+                    </div>
+                </div>
+            `
+        });
+        
+        marker.addListener('click', () => {
+            ownerMap.infoWindows = ownerMap.infoWindows || [];
+            ownerMap.infoWindows.forEach(iw => iw.close());
+            infoWindow.open(ownerMap, marker);
+            ownerMap.infoWindows.push(infoWindow);
+        });
+        
+        // Auto-fit bounds
+        if (index === 0) {
+            const bounds = new google.maps.LatLngBounds();
+            ownerRentals.forEach(r => {
+                bounds.extend({ lat: r.lat, lng: r.lng });
+            });
+            ownerMap.fitBounds(bounds);
+        }
+    });
+}
+
+function getOwnerMarkerColor(status) {
+    if (status === 'active') return 'blue';
+    if (status === 'completed') return 'green';
+    return 'red';
+}
+
+function getOwnerStatusColor(status) {
+    const colors = {
+        'active': '#4285F4',
+        'completed': '#34A853',
+        'rented': '#EA4335'
+    };
+    return colors[status] || '#666';
+}
+
+function toggleOwnerMapView() {
+    const mapContainer = document.getElementById('ownerMapContainer');
+    if (mapContainer.style.display === 'none') {
+        mapContainer.style.display = 'block';
+        if (!ownerMap) {
+            initOwnerMap();
+        } else {
+            google.maps.event.trigger(ownerMap, 'resize');
+        }
+    } else {
+        mapContainer.style.display = 'none';
+    }
+}
+</script>
+
+<!-- Load Google Maps API -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}"></script>
+
+{% endblock %}

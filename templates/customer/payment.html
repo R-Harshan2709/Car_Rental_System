@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block title %}Payment - Car Rental{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Complete Your Payment</h1>
+        <p>Finalize your rental booking</p>
+    </div>
+
+    <div class="payment-container">
+        <div class="payment-card">
+            <div class="payment-section">
+                <h2>Booking Details</h2>
+                <div class="booking-details">
+                    <div class="detail-row">
+                        <span class="label">Booking ID:</span>
+                        <span class="value">#{{ rental.id }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Car:</span>
+                        <span class="value">{{ rental.brand }} {{ rental.model }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Start Date:</span>
+                        <span class="value">{{ rental.start_date }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">End Date:</span>
+                        <span class="value">{{ rental.end_date }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Rental Status:</span>
+                        <span class="status-badge status-{{ rental.status }}">{{ rental.status|upper }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Approval Status:</span>
+                        <span class="status-badge status-{{ rental.approval_status }}">{{ rental.approval_status|upper }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-section">
+                <h2>Payment Summary</h2>
+                <div class="payment-summary">
+                    <div class="summary-row">
+                        <span class="summary-label">Base Rental Amount:</span>
+                        <span class="summary-value">₹{{ "%.2f"|format(rental.total_price) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Tax (10%):</span>
+                        <span class="summary-value">₹{{ "%.2f"|format(rental.total_price * 0.1) }}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span class="summary-label">Total Amount Due:</span>
+                        <span class="summary-value-total">₹{{ "%.2f"|format(rental.amount) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('customer.process_payment', rental_id=rental.id) }}" id="paymentForm">
+                <div class="payment-section">
+                    <h2>Payment Method</h2>
+                    <div class="payment-methods">
+                        <div class="method-option selected" data-method="upi">
+                            <input type="radio" name="payment_method" value="upi" required checked>
+                            <label>
+                                <span class="method-icon">📱</span>
+                                <span class="method-name">UPI</span>
+                            </label>
+                        </div>
+                        <div class="method-option" data-method="card">
+                            <input type="radio" name="payment_method" value="card" required>
+                            <label>
+                                <span class="method-icon">💳</span>
+                                <span class="method-name">Credit/Debit Card</span>
+                            </label>
+                        </div>
+                        <div class="method-option" data-method="netbanking">
+                            <input type="radio" name="payment_method" value="netbanking" required>
+                            <label>
+                                <span class="method-icon">🏦</span>
+                                <span class="method-name">Net Banking</span>
+                            </label>
+                        </div>
+                        <div class="method-option" data-method="wallet">
+                            <input type="radio" name="payment_method" value="wallet" required>
+                            <label>
+                                <span class="method-icon">👛</span>
+                                <span class="method-name">Digital Wallet</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Payment Form -->
+                <div id="cardPaymentSection" class="payment-section" style="display: none;">
+                    <h2>Card Details</h2>
+                    <div class="card-form">
+                        <div class="card-display">
+                            <div class="card-visual">
+                                <div class="card-chip">💳</div>
+                                <div class="card-number" id="displayCardNumber">•••• •••• •••• ••••</div>
+                                <div class="card-bottom">
+                                    <div class="cardholder-name" id="displayCardHolder">Your Name</div>
+                                    <div class="card-expiry" id="displayExpiry">MM/YY</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cardHolder">Cardholder Name *</label>
+                            <input type="text" id="cardHolder" name="card_holder" class="form-control" 
+                                   placeholder="John Doe" maxlength="50">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cardNumber">Card Number *</label>
+                            <input type="text" id="cardNumber" name="card_number" class="form-control" 
+                                   placeholder="1234 5678 9012 3456" maxlength="19" inputmode="numeric">
+                            <small>16 digit card number</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expiryDate">Expiry Date *</label>
+                                <input type="text" id="expiryDate" name="expiry_date" class="form-control" 
+                                       placeholder="MM/YY" maxlength="5" inputmode="numeric">
+                                <small>Format: MM/YY</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV *</label>
+                                <input type="text" id="cvv" name="cvv" class="form-control" 
+                                       placeholder="123" maxlength="4" inputmode="numeric">
+                                <small>3-4 digit code</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-info">
+                    <div class="info-box">
+                        <strong>ℹ️ Demo Mode:</strong> This is a demonstration. In production, this would integrate with actual payment gateways like Razorpay, Stripe, or PayPal. All card details are simulated and not processed.
+                    </div>
+                </div>
+
+                <div class="payment-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        💳 Complete Payment - ₹{{ "%.2f"|format(rental.amount) }}
+                    </button>
+                    <a href="{{ url_for('customer.rentals') }}" class="btn btn-outline btn-lg">Cancel</a>
+                </div>
+            </form>
+
+            <div class="security-note">
+                🔒 Your payment is secure and encrypted. We use industry-standard security protocols.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.payment-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.payment-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.payment-section:last-of-type {
+    border-bottom: none;
+}
+
+.payment-section h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+}
+
+.booking-details,
+.payment-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-row,
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-row:last-child,
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.label,
+.summary-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.value,
+.summary-value {
+    color: var(--text-primary);
+}
+
+.summary-row.total {
+    padding: 1rem 0;
+    border-top: 2px solid var(--primary);
+    border-bottom: none;
+}
+
+.summary-row.total .summary-label {
+    font-size: 1.1rem;
+}
+
+.summary-value-total {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-light);
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.method-option {
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.method-option:hover {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.method-option.selected {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.method-option input {
+    display: none;
+}
+
+.method-option label {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.method-icon {
+    font-size: 2rem;
+}
+
+.method-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Card Payment Form Styles */
+.card-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.card-display {
+    margin-bottom: 1rem;
+}
+
+.card-visual {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-chip {
+    font-size: 2.5rem;
+    width: 50px;
+    text-align: center;
+}
+
+.card-number {
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+    margin: 1rem 0;
+}
+
+.card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.cardholder-name {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.card-expiry {
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+    font-family: 'Courier New', monospace;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.payment-info {
+    padding: 1.5rem 2rem;
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.info-box {
+    padding: 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 3px solid var(--primary);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.payment-actions {
+    padding: 2rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.payment-actions button,
+.payment-actions a {
+    flex: 1;
+}
+
+.btn-lg {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.security-note {
+    padding: 1rem 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    background: rgba(16, 185, 129, 0.05);
+    border-top: 1px solid var(--border-color);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+    .payment-methods {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-actions {
+        flex-direction: column;
+    }
+    
+    .card-visual {
+        padding: 1.5rem;
+    }
+}
+</style>
+
+<script>
+// Payment method selection
+document.querySelectorAll('.method-option input').forEach(option => {
+    option.addEventListener('change', function() {
+        document.querySelectorAll('.method-option').forEach(el => {
+            el.classList.remove('selected');
+        });
+        this.parentElement.classList.add('selected');
+        
+        // Show/hide card form based on selection
+        const cardPaymentSection = document.getElementById('cardPaymentSection');
+        if (this.value === 'card') {
+            cardPaymentSection.style.display = 'block';
+        } else {
+            cardPaymentSection.style.display = 'none';
+        }
+    });
+});
+
+// Card number formatting
+document.getElementById('cardNumber').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formattedValue = value.replace(/(\d{4})/g, '$1 ').trim();
+    e.target.value = formattedValue;
+    
+    // Update display
+    const display = value || '0000000000000000';
+    const masked = display.slice(0, -4).replace(/\d/g, '•') + display.slice(-4);
+    document.getElementById('displayCardNumber').textContent = masked.replace(/(.{4})/g, '$1 ').trim();
+});
+
+// Cardholder name
+document.getElementById('cardHolder').addEventListener('input', function(e) {
+    document.getElementById('displayCardHolder').textContent = e.target.value.toUpperCase() || 'Your Name';
+});
+
+// Expiry date formatting
+document.getElementById('expiryDate').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    e.target.value = value;
+    
+    // Update display
+    document.getElementById('displayExpiry').textContent = e.target.value || 'MM/YY';
+});
+
+// CVV - only numbers
+document.getElementById('cvv').addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
+});
+
+// Form validation
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    if (!paymentMethod) {
+        alert('Please select a payment method');
+        e.preventDefault();
+        return;
+    }
+    
+    if (paymentMethod === 'card') {
+        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        const expiryDate = document.getElementById('expiryDate').value;
+        const cvv = document.getElementById('cvv').value;
+        const cardHolder = document.getElementById('cardHolder').value;
+        
+        let validationErrors = [];
+        
+        if (!cardNumber || cardNumber.length !== 16 || !/^\d+$/.test(cardNumber)) {
+            validationErrors.push('Please enter a valid 16-digit card number');
+        }
+        
+        if (!expiryDate || expiryDate.length !== 5 || !/^\d{2}\/\d{2}$/.test(expiryDate)) {
+            validationErrors.push('Please enter expiry date in MM/YY format');
+        }
+        
+        if (!cvv || cvv.length < 3 || cvv.length > 4 || !/^\d+$/.test(cvv)) {
+            validationErrors.push('Please enter a valid CVV (3-4 digits)');
+        }
+        
+        if (!cardHolder || !cardHolder.trim()) {
+            validationErrors.push('Please enter cardholder name');
+        }
+        
+        if (validationErrors.length > 0) {
+            alert(validationErrors.join('\n'));
+            e.preventDefault();
+            return;
+        }
+    }
+    
+    // Form is valid, allow submission
+});
+</script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p>Manage your car rental system</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <h3>{{ stats.total_customers }}</h3>
+                <p>Total Customers</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-success">
+            <div class="stat-icon">🏢</div>
+            <div class="stat-content">
+                <h3>{{ stats.total_owners }}</h3>
+                <p>Car Owners</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-info">
+            <div class="stat-icon">🚗</div>
+            <div class="stat-content">
+                <h3>{{ stats.total_cars }}</h3>
+                <p>Approved Cars</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-warning">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-content">
+                <h3>{{ stats.pending_cars }}</h3>
+                <p>Pending Approvals</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-accent">
+            <div class="stat-icon">📋</div>
+            <div class="stat-content">
+                <h3>{{ stats.active_rentals }}</h3>
+                <p>Active Rentals</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-revenue">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+                <h3>₹{{ "%.2f"|format(stats.total_revenue) }}</h3>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Details Section -->
+    <div class="revenue-section">
+        <h2>Revenue Analytics</h2>
+        <div class="revenue-grid">
+            <div class="revenue-card">
+                <div class="revenue-label">💰 Total Revenue</div>
+                <div class="revenue-amount">₹{{ "%.2f"|format(stats.total_revenue) }}</div>
+                <div class="revenue-description">All-time earnings</div>
+            </div>
+            
+            <div class="revenue-card">
+                <div class="revenue-label">✓ Completed Rentals</div>
+                <div class="revenue-amount">{{ stats.completed_rentals }}</div>
+                <div class="revenue-description">Total bookings</div>
+            </div>
+            
+            <div class="revenue-card">
+                <div class="revenue-label">📅 This Month</div>
+                <div class="revenue-amount">₹{{ "%.2f"|format(stats.monthly_revenue) }}</div>
+                <div class="revenue-description">Monthly earnings</div>
+            </div>
+            
+            <div class="revenue-card">
+                <div class="revenue-label">📊 Avg/Rental</div>
+                <div class="revenue-amount">₹{{ "%.2f"|format(stats.average_rental) }}</div>
+                <div class="revenue-description">Per booking</div>
+            </div>
+
+            <div class="revenue-card">
+                <div class="revenue-label">⏳ Pending</div>
+                <div class="revenue-amount">₹{{ "%.2f"|format(stats.pending_payments) }}</div>
+                <div class="revenue-description">Awaiting completion</div>
+            </div>
+
+            <div class="revenue-card">
+                <div class="revenue-label">🚗 Active</div>
+                <div class="revenue-amount">₹{{ "%.2f"|format(stats.active_rental_value) }}</div>
+                <div class="revenue-description">Ongoing rentals</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.pending_cars') }}" class="action-btn">
+                <span class="action-icon">🚗</span>
+                <span>Review Pending Cars</span>
+                {% if stats.pending_cars > 0 %}
+                <span class="badge">{{ stats.pending_cars }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('admin.users') }}" class="action-btn">
+                <span class="action-icon">👥</span>
+                <span>Manage Users</span>
+            </a>
+            <a href="{{ url_for('admin.rentals') }}" class="action-btn">
+                <span class="action-icon">📋</span>
+                <span>View All Rentals</span>
+            </a>
+            <a href="{{ url_for('admin.drivers') }}" class="action-btn">
+                <span class="action-icon">🚙</span>
+                <span>Manage Drivers</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Rentals -->
+    <div class="recent-section">
+        <h2>Recent Rentals</h2>
+        {% if recent_rentals %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Car</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Total Price</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rental in recent_rentals %}
+                    <tr>
+                        <td>#{{ rental.id }}</td>
+                        <td>{{ rental.username }}</td>
+                        <td>{{ rental.brand }} {{ rental.model }}</td>
+                        <td>{{ rental.start_date }}</td>
+                        <td>{{ rental.end_date }}</td>
+                        <td>₹{{ "%.2f"|format(rental.total_price) }}</td>
+                        <td><span class="status-badge status-{{ rental.status }}">{{ rental.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No rentals yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

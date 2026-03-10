@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ car.brand }} {{ car.model }} - Car Details{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="car-details-container">
+        <div class="car-details-image">
+            {% if car.image_path %}
+            <img src="{{ url_for('static', filename=car.image_path) }}" alt="{{ car.brand }} {{ car.model }}">
+            {% else %}
+            <div class="car-placeholder-large">🚗</div>
+            {% endif %}
+        </div>
+
+        <div class="car-details-info">
+            <h1>{{ car.brand }} {{ car.model }}</h1>
+            <p class="car-year">Year: {{ car.year }}</p>
+            {% if car.registration %}
+            <p class="car-registration"><strong>Registration:</strong> {{ car.registration }}</p>
+            {% endif %}
+            <p class="car-owner-info">Listed by: {{ car.owner_name }}</p>
+
+            <div class="price-box">
+                <span class="price-amount">₹{{ "%.2f"|format(car.price_per_day) }}</span>
+                <span class="price-label">per day</span>
+            </div>
+
+            {% if car.description %}
+            <div class="car-description-full">
+                <h3>Description</h3>
+                <p>{{ car.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Rental Form -->
+            <div class="rental-form-section">
+                <h3>Book This Car</h3>
+                <form method="POST" action="{{ url_for('customer.rent_car', car_id=car.id) }}" class="rental-form">
+                    <div class="form-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" required
+                            min="{{ today }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="end_date">End Date</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control" required
+                            min="{{ today }}">
+                    </div>
+
+                    <div class="price-calculation">
+                        <p id="total-days">Select dates to see total price</p>
+                        <p id="total-price"></p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">Rent Now</button>
+                </form>
+            </div>
+
+            <a href="{{ url_for('customer.browse_cars') }}" class="btn btn-outline">← Back to Browse</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const pricePerDay = {{ car.price_per_day }};
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const totalDaysEl = document.getElementById('total-days');
+    const totalPriceEl = document.getElementById('total-price');
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    endDateInput.min = today;
+
+    function calculatePrice() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+
+        if (startDate && endDate && endDate > startDate) {
+            const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            const subtotal = days * pricePerDay;
+            const tax = subtotal * 0.1;
+            const total = subtotal + tax;
+
+            totalDaysEl.textContent = `${days} day${days > 1 ? 's' : ''}`;
+            totalPriceEl.innerHTML = `
+                <strong>Subtotal:</strong> ₹${subtotal.toFixed(2)}<br>
+                <strong>Tax (10%):</strong> ₹${tax.toFixed(2)}<br>
+                <strong>Total:</strong> ₹${total.toFixed(2)}
+            `;
+        } else {
+            totalDaysEl.textContent = 'Select dates to see total price';
+            totalPriceEl.textContent = '';
+        }
+    }
+
+    startDateInput.addEventListener('change', calculatePrice);
+    endDateInput.addEventListener('change', calculatePrice);
+</script>
+{% endblock %}

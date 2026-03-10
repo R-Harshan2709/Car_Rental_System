@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Welcome, {{ session.username }}!</h1>
+        <p>Find and rent your perfect car</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">📋</div>
+            <div class="stat-content">
+                <h3>{{ stats.total_rentals }}</h3>
+                <p>Total Rentals</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-accent">
+            <div class="stat-icon">🚗</div>
+            <div class="stat-content">
+                <h3>{{ stats.active_rentals }}</h3>
+                <p>Active Rentals</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-revenue">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+                <h3>₹{{ "%.2f"|format(stats.total_spent) }}</h3>
+                <p>Total Spent</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <a href="{{ url_for('customer.browse_cars') }}" class="action-btn action-btn-primary">
+                <span class="action-icon">🔍</span>
+                <span>Browse Cars</span>
+            </a>
+            <a href="{{ url_for('customer.rentals') }}" class="action-btn">
+                <span class="action-icon">📋</span>
+                <span>My Rentals</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Rentals -->
+    {% if recent_rentals %}
+    <div class="recent-section">
+        <h2>Recent Rentals</h2>
+        <div class="rentals-grid">
+            {% for rental in recent_rentals %}
+            <div class="rental-card">
+                <div class="rental-image">
+                    {% if rental.image_path %}
+                    <img src="{{ url_for('static', filename=rental.image_path) }}"
+                        alt="{{ rental.brand }} {{ rental.model }}">
+                    {% else %}
+                    <div class="car-placeholder">🚗</div>
+                    {% endif %}
+                </div>
+
+                <div class="rental-content">
+                    <h3>{{ rental.brand }} {{ rental.model }}</h3>
+                    <p class="rental-dates">{{ rental.start_date }} to {{ rental.end_date }}</p>
+                    <p class="rental-driver">Driver: {{ rental.driver_name }} ({{ rental.driver_phone }})</p>
+                    <p class="rental-price">₹{{ "%.2f"|format(rental.total_price) }}</p>
+                    <div class="status-badges-container">
+                        <span class="status-badge status-{{ rental.status }}">{{ rental.status }}</span>
+                        {% if rental.approval_status %}
+                            <span class="status-badge status-{{ rental.approval_status }}">{{ rental.approval_status }}</span>
+                        {% else %}
+                            <span class="status-badge status-pending">pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Car Rental System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    {% if session.user_id %}
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="{% if session.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif session.role == 'owner' %}{{ url_for('owner.dashboard') }}{% else %}{{ url_for('customer.dashboard') }}{% endif %}">
+                    <span class="logo-icon">🚗</span>
+                    <span class="logo-text">CarRental</span>
+                </a>
+            </div>
+            
+            <div class="nav-links">
+                {% if session.role == 'admin' %}
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link">Dashboard</a>
+                    <a href="{{ url_for('admin.pending_cars') }}" class="nav-link">Pending Cars</a>
+                    <a href="{{ url_for('admin.users') }}" class="nav-link">Users</a>
+                    <a href="{{ url_for('admin.rentals') }}" class="nav-link">Rentals</a>
+                    <a href="{{ url_for('admin.drivers') }}" class="nav-link">Drivers</a>
+                {% elif session.role == 'owner' %}
+                    <a href="{{ url_for('owner.dashboard') }}" class="nav-link">Dashboard</a>
+                    <a href="{{ url_for('owner.my_cars') }}" class="nav-link">My Cars</a>
+                    <a href="{{ url_for('owner.add_car') }}" class="nav-link">Add Car</a>
+                    <a href="{{ url_for('owner.rentals') }}" class="nav-link">Rentals</a>
+                {% else %}
+                    <a href="{{ url_for('customer.dashboard') }}" class="nav-link">Dashboard</a>
+                    <a href="{{ url_for('customer.browse_cars') }}" class="nav-link">Browse Cars</a>
+                    <a href="{{ url_for('customer.rentals') }}" class="nav-link">My Rentals</a>
+                {% endif %}
+                
+                <div class="nav-user">
+                    <span class="user-name">{{ session.username }}</span>
+                    <span class="user-role">{{ session.role }}</span>
+                </div>
+                
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">Logout</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        <span class="flash-icon">
+                            {% if category == 'success' %}✓{% elif category == 'danger' %}✕{% elif category == 'warning' %}⚠{% else %}ℹ{% endif %}
+                        </span>
+                        <span class="flash-message">{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CarRental System. All rights reserved.</p>
+            <p class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Us</a>
+            </p>
+        </div>
+    </footer>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

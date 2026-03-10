@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Cars{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Browse Available Cars</h1>
+        <p>Find your perfect ride</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('customer.browse_cars') }}" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="brand" placeholder="Search by brand..." class="form-control"
+                    value="{{ request.args.get('brand', '') }}">
+            </div>
+
+            <div class="filter-group">
+                <input type="number" name="min_price" placeholder="Min price" class="form-control"
+                    value="{{ request.args.get('min_price', '') }}" step="0.01">
+            </div>
+
+            <div class="filter-group">
+                <input type="number" name="max_price" placeholder="Max price" class="form-control"
+                    value="{{ request.args.get('max_price', '') }}" step="0.01">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('customer.browse_cars') }}" class="btn btn-outline">Clear</a>
+        </form>
+    </div>
+
+    <!-- Cars Grid -->
+    {% if cars %}
+    <div class="cars-grid">
+        {% for car in cars %}
+        <div class="car-card">
+            <div class="car-image">
+                {% if car.image_path %}
+                <img src="{{ url_for('static', filename=car.image_path) }}" alt="{{ car.brand }} {{ car.model }}">
+                {% else %}
+                <div class="car-placeholder">🚗</div>
+                {% endif %}
+            </div>
+
+            <div class="car-content">
+                <h3>{{ car.brand }} {{ car.model }}</h3>
+                <p class="car-year">{{ car.year }}</p>
+                {% if car.registration %}
+                <p class="car-registration" style="font-size: 0.9em; color: #666;"><strong>Reg:</strong> {{ car.registration }}</p>
+                {% endif %}
+                <p class="car-price">₹{{ "%.2f"|format(car.price_per_day) }} <span class="price-label">/ day</span></p>
+
+                {% if car.description %}
+                <p class="car-description">{{ car.description[:100] }}{% if car.description|length > 100 %}...{% endif
+                    %}</p>
+                {% endif %}
+
+                <a href="{{ url_for('customer.car_details', car_id=car.id) }}" class="btn btn-primary btn-block">View
+                    Details</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-container">
+        <div class="empty-state-icon">🔍</div>
+        <h2>No cars found</h2>
+        <p>Try adjusting your filters or check back later.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

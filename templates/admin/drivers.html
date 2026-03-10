@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Drivers - Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Driver Management</h1>
+        <p>View and manage all drivers and their current assignments</p>
+    </div>
+
+    <!-- Statistics Summary -->
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #34A853 0%, #2d8f47 100%);">🟢</div>
+            <div class="stat-info">
+                <h3>{{ drivers|selectattr('availability_status', 'equalto', 'available')|list|length }}</h3>
+                <p>Available Drivers</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4285F4 0%, #3367d6 100%);">🔵</div>
+            <div class="stat-info">
+                <h3>{{ drivers|selectattr('availability_status', 'equalto', 'assigned')|list|length }}</h3>
+                <p>Assigned Drivers</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #FBBC04 0%, #f9ab00 100%);">👨‍✈️</div>
+            <div class="stat-info">
+                <h3>{{ drivers|length }}</h3>
+                <p>Total Drivers</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>License Number</th>
+                    <th>Status</th>
+                    <th>Info</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in drivers %}
+                <tr>
+                    <td>#{{ driver.id }}</td>
+                    <td>{{ driver.name }}</td>
+                    <td>{{ driver.phone }}</td>
+                    <td>{{ driver.license_number }}</td>
+                    <td>
+                        <span class="status-badge status-{{ driver.availability_status }}">
+                            {{ driver.availability_status }}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="showDriverInfo({{ driver.id }})">
+                            ℹ️ Details
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Driver Info Modal -->
+<div id="driverInfoModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="modal-close" onclick="closeDriverModal()">&times;</span>
+        <div id="driverInfoContent">
+            <!-- Content will be dynamically loaded -->
+        </div>
+    </div>
+</div>
+
+<script>
+// Store driver data for JavaScript access
+const driversData = {
+    {% for driver in drivers %}
+    {{ driver.id }}: {
+        id: {{ driver.id }},
+        name: "{{ driver.name }}",
+        phone: "{{ driver.phone }}",
+        license: "{{ driver.license_number }}",
+        status: "{{ driver.availability_status }}",
+        rental_id: {{ driver.rental_id if driver.rental_id else 'null' }},
+        rental_status: "{{ driver.rental_status if driver.rental_status else '' }}",
+        car_brand: "{{ driver.brand if driver.brand else '' }}",
+        car_model: "{{ driver.model if driver.model else '' }}",
+        car_registration: "{{ driver.registration if driver.registration else '' }}",
+        customer_name: "{{ driver.customer_name if driver.customer_name else '' }}",
+        start_date: "{{ driver.start_date if driver.start_date else '' }}",
+        end_date: "{{ driver.end_date if driver.end_date else '' }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
+
+function showDriverInfo(driverId) {
+    const driver = driversData[driverId];
+    const modal = document.getElementById('driverInfoModal');
+    const content = document.getElementById('driverInfoContent');
+    
+    let html = `
+        <h2 style="margin-bottom: 1.5rem; color: #f1f5f9; display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 2rem;">👨‍✈️</span>
+            Driver Information
+        </h2>
+        
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1.5rem; border-radius: 12px; border: 1px solid #475569; margin-bottom: 1.5rem;">
+            <h3 style="color: #f1f5f9; margin-bottom: 1rem; font-size: 1.25rem;">👤 Personal Details</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                <div>
+                    <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">Name</p>
+                    <p style="color: #f1f5f9; font-weight: 600; font-size: 1rem;">${driver.name}</p>
+                </div>
+                <div>
+                    <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">Phone</p>
+                    <p style="color: #f1f5f9; font-weight: 600; font-size: 1rem;">${driver.phone}</p>
+                </div>
+                <div>
+                    <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">License Number</p>
+                    <p style="color: #f1f5f9; font-weight: 600; font-size: 1rem;">${driver.license}</p>
+                </div>
+                <div>
+                    <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.25rem;">Status</p>
+                    <span class="status-badge status-${driver.status}" style="font-size: 0.875rem;">${driver.status}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (driver.status === 'assigned' && driver.rental_id) {
+        html += `
+            <div style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid #3b82f6; margin-bottom: 1rem;">
+                <h3 style="color: #f1f5f9; margin-bottom: 1rem; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                    🚗 Current Assignment
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div>
+                        <p style="color: #bfdbfe; font-size: 0.875rem; margin-bottom: 0.25rem;">Rental ID</p>
+                        <p style="color: #fff; font-weight: 600; font-size: 1rem;">#${driver.rental_id}</p>
+                    </div>
+                    <div>
+                        <p style="color: #bfdbfe; font-size: 0.875rem; margin-bottom: 0.25rem;">Rental Status</p>
+                        <span class="status-badge status-${driver.rental_status}" style="font-size: 0.875rem;">${driver.rental_status}</span>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <p style="color: #bfdbfe; font-size: 0.875rem; margin-bottom: 0.25rem;">Assigned Vehicle</p>
+                        <p style="color: #fff; font-weight: 700; font-size: 1.1rem;">${driver.car_brand} ${driver.car_model}</p>
+                        <p style="color: #bfdbfe; font-size: 0.875rem;">Registration: ${driver.car_registration}</p>
+                    </div>
+                    <div>
+                        <p style="color: #bfdbfe; font-size: 0.875rem; margin-bottom: 0.25rem;">Customer</p>
+                        <p style="color: #fff; font-weight: 600; font-size: 1rem;">${driver.customer_name}</p>
+                    </div>
+                    <div>
+                        <p style="color: #bfdbfe; font-size: 0.875rem; margin-bottom: 0.25rem;">Rental Period</p>
+                        <p style="color: #fff; font-weight: 600; font-size: 0.875rem;">${driver.start_date} to ${driver.end_date}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (driver.status === 'available') {
+        html += `
+            <div style="background: linear-gradient(135deg, #15803d 0%, #166534 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid #34A853; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">✅</div>
+                <h3 style="color: #f1f5f9; font-size: 1.25rem; margin-bottom: 0.5rem;">Driver Available</h3>
+                <p style="color: #bbf7d0; font-size: 0.95rem;">This driver is currently available for assignment to new rentals.</p>
+            </div>
+        `;
+    }
+    
+    html += `
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <button class="btn btn-primary" onclick="closeDriverModal()">Close</button>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+    modal.style.display = 'flex';
+}
+
+function closeDriverModal() {
+    document.getElementById('driverInfoModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('driverInfoModal');
+    if (event.target === modal) {
+        closeDriverModal();
+    }
+}
+</script>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    border: 1px solid #334155;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.modal-close:hover {
+    color: #f1f5f9;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #4285F4 0%, #3367d6 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.3s;
+}
+
+.btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

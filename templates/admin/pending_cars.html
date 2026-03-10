@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Pending Car Approvals - Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Pending Car Approvals</h1>
+        <p>Review and approve car listings</p>
+    </div>
+
+    {% if cars %}
+    <div class="cars-grid">
+        {% for car in cars %}
+        <div class="car-approval-card">
+            <div class="car-image">
+                {% if car.image_path %}
+                <img src="{{ url_for('static', filename=car.image_path) }}" alt="{{ car.brand }} {{ car.model }}">
+                {% else %}
+                <div class="car-placeholder">🚗</div>
+                {% endif %}
+            </div>
+
+            <div class="car-info">
+                <h3>{{ car.brand }} {{ car.model }}</h3>
+                <p class="car-year">Year: {{ car.year }}</p>
+                {% if car.registration %}
+                <p class="car-registration"><strong>Registration:</strong> {{ car.registration }}</p>
+                {% endif %}
+                <p class="car-owner">Owner: {{ car.owner_name }}</p>
+                <p class="car-price">₹{{ "%.2f"|format(car.price_per_day) }} / day</p>
+                {% if car.description %}
+                <p class="car-description">{{ car.description }}</p>
+                {% endif %}
+            </div>
+
+            <div class="car-actions">
+                <form method="POST" action="{{ url_for('admin.approve_car', car_id=car.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-success">✓ Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reject_car', car_id=car.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">✕ Reject</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-container">
+        <div class="empty-state-icon">✓</div>
+        <h2>All caught up!</h2>
+        <p>No pending car approvals at the moment.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

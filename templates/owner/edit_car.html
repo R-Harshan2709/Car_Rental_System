@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Car - Car Owner{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Edit Car</h1>
+        <p>Update your car details</p>
+    </div>
+
+    <div class="form-container">
+        <form method="POST" action="{{ url_for('owner.edit_car', car_id=car.id) }}" class="car-form">
+            <div class="form-group">
+                <label for="registration">Car Registration/Number *</label>
+                <input type="text" id="registration" name="registration" class="form-control" required value="{{ car.registration }}" pattern="[A-Z]{2}\d{2}[A-Z]{2}\d{4}" title="Format: DL01AB1234">
+                <small>Format: DL01AB1234 (State Code + 2 Digits + 2 Letters + 4 Digits)</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brand">Brand *</label>
+                    <input type="text" id="brand" name="brand" class="form-control" required value="{{ car.brand }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="model">Model *</label>
+                    <input type="text" id="model" name="model" class="form-control" required value="{{ car.model }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="year">Year *</label>
+                    <input type="number" id="year" name="year" class="form-control" required min="1900" max="2025"
+                        value="{{ car.year }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="price_per_day">Price per Day (₹) *</label>
+                    <input type="number" id="price_per_day" name="price_per_day" class="form-control" required min="1"
+                        step="0.01" value="{{ car.price_per_day }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control"
+                    rows="4">{{ car.description or '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Update Car</button>
+                <a href="{{ url_for('owner.my_cars') }}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

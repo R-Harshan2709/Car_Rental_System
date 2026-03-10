@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card auth-card-large">
+        <div class="auth-header">
+            <div class="auth-logo">🚗</div>
+            <h1>Welcome Back</h1>
+            <p>Sign in to manage your rentals</p>
+        </div>
+
+        <!-- Role Tabs -->
+        <div class="role-tabs">
+            <button type="button" class="role-tab active" data-role="admin">
+                ADMIN
+            </button>
+            <button type="button" class="role-tab" data-role="owner">
+                OWNER
+            </button>
+            <button type="button" class="role-tab" data-role="customer">
+                CUSTOMER
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form" id="loginForm">
+            <input type="hidden" id="selectedRole" name="role" value="admin">
+
+            <div class="form-group">
+                <label for="username">Email Address</label>
+                <input type="text" id="username" name="username" class="form-control" required autofocus
+                    placeholder="Enter your email or username">
+                <small class="role-hint" id="roleHint">Try: admin@luxedrive.com, owner@cars.com, john@doe.com</small>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required
+                    placeholder="Enter your password">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a></p>
+        </div>
+
+        <div class="demo-credentials">
+            <p class="demo-title">Demo Credentials:</p>
+            <div id="adminCreds" class="demo-role-creds">
+                <p><strong>Admin:</strong> username: admin, password: admin123</p>
+            </div>
+            <div id="ownerCreds" class="demo-role-creds" style="display: none;">
+                <p><strong>Owner:</strong> username: testowner, password: test123</p>
+            </div>
+            <div id="customerCreds" class="demo-role-creds" style="display: none;">
+                <p><strong>Customer:</strong> Create a new account to test</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Role tab switching
+    document.addEventListener('DOMContentLoaded', function () {
+        const roleTabs = document.querySelectorAll('.role-tab');
+        const selectedRoleInput = document.getElementById('selectedRole');
+        const roleHint = document.getElementById('roleHint');
+
+        const hints = {
+            admin: 'Try: admin@luxedrive.com, owner@cars.com, john@doe.com',
+            owner: 'Try: admin@luxedrive.com, owner@cars.com, john@doe.com',
+            customer: 'Try: admin@luxedrive.com, owner@cars.com, john@doe.com'
+        };
+
+        roleTabs.forEach(tab => {
+            tab.addEventListener('click', function () {
+                // Remove active class from all tabs
+                roleTabs.forEach(t => t.classList.remove('active'));
+
+                // Add active class to clicked tab
+                this.classList.add('active');
+
+                // Update hidden input
+                const role = this.getAttribute('data-role');
+                selectedRoleInput.value = role;
+
+                // Update hint
+                roleHint.textContent = hints[role];
+
+                // Show appropriate demo credentials
+                document.querySelectorAll('.demo-role-creds').forEach(cred => {
+                    cred.style.display = 'none';
+                });
+                document.getElementById(role + 'Creds').style.display = 'block';
+            });
+        });
+    });
+</script>
+{% endblock %}

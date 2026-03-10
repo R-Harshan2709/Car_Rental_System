@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}My Rentals{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>My Rentals</h1>
+            <p>View your rental history and receipts</p>
+        </div>
+        {% if rentals %}
+        <button class="btn btn-primary" onclick="toggleMapView()" style="margin-top: 1rem;">📍 View Map</button>
+        {% endif %}
+    </div>
+
+    <!-- Google Map View -->
+    {% if rentals %}
+    <div id="mapContainer" style="display: none; margin-bottom: 2rem;">
+        <div id="googleMap" style="width: 100%; height: 500px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); border: 1px solid #334155;"></div>
+        
+        <!-- Map Legend Card -->
+        <div style="position: relative; z-index: 10; margin-top: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 12px; border: 2px solid #fbbf24; box-shadow: 0 10px 20px -5px rgba(251, 188, 4, 0.3); backdrop-filter: blur(10px);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem;">📍</span>
+                    <h3 style="margin: 0; color: #f1f5f9; font-size: 1.1rem; font-weight: 700;">Legend - Marker Reference</h3>
+                </div>
+                <span style="font-size: 0.85rem; color: #cbd5e1; background: rgba(251, 188, 4, 0.2); padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid #fbbf24;">Click markers on map to view details</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem;">
+                <div style="display: flex; align-items: flex-start; padding: 1rem; background: rgba(66, 133, 244, 0.1); border-left: 4px solid #4285F4; border-radius: 8px; transition: all 0.3s ease;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem; min-width: 30px;">🔵</span>
+                    <div>
+                        <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #fff; font-size: 0.95rem;">ACTIVE Rental</p>
+                        <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">Vehicle is currently being rented. View customer details by clicking the marker.</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; padding: 1rem; background: rgba(52, 168, 83, 0.1); border-left: 4px solid #34A853; border-radius: 8px; transition: all 0.3s ease;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem; min-width: 30px;">🟢</span>
+                    <div>
+                        <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #fff; font-size: 0.95rem;">COMPLETED Rental</p>
+                        <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">Rental has been completed successfully. All transactions finished.</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; padding: 1rem; background: rgba(234, 67, 53, 0.1); border-left: 4px solid #EA4335; border-radius: 8px; transition: all 0.3s ease;">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem; min-width: 30px;">🔴</span>
+                    <div>
+                        <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #fff; font-size: 0.95rem;">PENDING Rental</p>
+                        <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">Rental awaiting approval. Status will update once approved by owner.</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; padding: 1rem; background: rgba(251, 188, 4, 0.15); border-left: 4px solid #FBBC04; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(251, 188, 4, 0.2);">
+                    <span style="font-size: 1.5rem; margin-right: 0.75rem; min-width: 30px;">🟡</span>
+                    <div>
+                        <p style="margin: 0 0 0.3rem 0; font-weight: 700; color: #fff; font-size: 0.95rem;">PAYMENT PENDING ⚠️</p>
+                        <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">Payment has not been completed yet. You can view payment details in the rental info window.</p>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border-left: 3px solid #cbd5e1;">
+                <p style="margin: 0; color: #e2e8f0; font-size: 0.85rem;">💡 <strong>Tip:</strong> Click any colored marker on the map above to see detailed rental information including booking ID, car details, dates, price, and payment status.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if rentals %}
+    <div class="rentals-list">
+    <div class="rentals-list">
+        {% for rental in rentals %}
+        <div class="rental-item">
+            <div class="rental-image">
+                {% if rental.image_path %}
+                <img src="{{ url_for('static', filename=rental.image_path) }}"
+                    alt="{{ rental.brand }} {{ rental.model }}">
+                {% else %}
+                <div class="car-placeholder">🚗</div>
+                {% endif %}
+            </div>
+
+            <div class="rental-details">
+                <h3>{{ rental.brand }} {{ rental.model }}</h3>
+                <div class="rental-info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Booking ID</span>
+                        <span class="info-value">#{{ rental.id }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Start Date</span>
+                        <span class="info-value">{{ rental.start_date }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">End Date</span>
+                        <span class="info-value">{{ rental.end_date }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total Price</span>
+                        <span class="info-value">₹{{ "%.2f"|format(rental.total_price) }}</span>
+                    </div>
+                </div>
+
+                {% if rental.driver_name %}
+                <div class="driver-info">
+                    <h4>🚙 Assigned Driver</h4>
+                    <p><strong>Name:</strong> {{ rental.driver_name }}</p>
+                    <p><strong>Phone:</strong> {{ rental.driver_phone }}</p>
+                </div>
+                {% endif %}
+
+                <div class="rental-status-section">
+                    <div class="status-item">
+                        <span class="status-label">Rental Status:</span>
+                        <span class="status-badge status-{{ rental.status }}">{{ rental.status|upper }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Approval Status:</span>
+                        {% if rental.approval_status %}
+                            <span class="status-badge status-{{ rental.approval_status }}">{{ rental.approval_status|upper }}</span>
+                        {% else %}
+                            <span class="status-badge status-pending">PENDING</span>
+                        {% endif %}
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Payment Status:</span>
+                        {% if rental.payment_status == 'completed' %}
+                            <span class="status-badge status-completed">✓ PAID</span>
+                        {% elif rental.payment_status == 'failed' %}
+                            <span class="status-badge status-rejected">✗ FAILED</span>
+                        {% else %}
+                            <span class="status-badge status-pending">⏳ PENDING</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if rental.amount %}
+                <div class="payment-details-box">
+                    <h4>💳 Payment Details</h4>
+                    <div class="payment-detail-grid">
+                        <div class="payment-item">
+                            <span class="payment-label">Amount Due:</span>
+                            <span class="payment-value">₹{{ "%.2f"|format(rental.amount) }}</span>
+                        </div>
+                        <div class="payment-item">
+                            <span class="payment-label">Payment Status:</span>
+                            {% if rental.payment_status == 'completed' %}
+                                <span class="payment-badge paid">✓ Paid</span>
+                            {% elif rental.payment_status == 'failed' %}
+                                <span class="payment-badge failed">✗ Failed</span>
+                            {% else %}
+                                <span class="payment-badge pending">⏳ Pending Payment</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if rental.approval_status == 'rejected' %}
+                <div class="alert alert-danger">
+                    <strong>⚠️ Rental Rejected:</strong> Your rental request has been rejected by the admin. Please contact support for more information.
+                </div>
+                {% endif %}
+
+                {% if rental.approval_status == 'approved' %}
+                <div class="alert alert-success">
+                    <strong>✓ Rental Approved:</strong> Your rental has been approved! You can proceed with the booking.
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="rental-actions">
+                <div class="action-buttons-group">
+                    {% if rental.approval_status == 'approved' and rental.payment_status != 'completed' %}
+                    <a href="{{ url_for('customer.payment', rental_id=rental.id) }}" class="btn btn-primary btn-sm">
+                        💳 Pay Now
+                    </a>
+                    {% endif %}
+                    
+                    {% if rental.receipt_path %}
+                    <a href="{{ url_for('customer.view_receipt', rental_id=rental.id) }}" class="btn btn-outline btn-sm">
+                        📄 Receipt
+                    </a>
+                    {% endif %}
+
+                    {% if rental.payment_status == 'completed' %}
+                    <span class="payment-status-badge status-completed">✓ Payment Completed</span>
+                    {% elif rental.payment_status == 'failed' %}
+                    <a href="{{ url_for('customer.payment', rental_id=rental.id) }}" class="btn btn-danger btn-sm">
+                        🔄 Retry Payment
+                    </a>
+                    {% elif rental.approval_status == 'approved' %}
+                    <span class="payment-status-badge status-pending">⏳ Awaiting Payment</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-container">
+        <div class="empty-state-icon">📋</div>
+        <h2>No rentals yet</h2>
+        <p>Start browsing cars to make your first rental!</p>
+        <a href="{{ url_for('customer.browse_cars') }}" class="btn btn-primary">Browse Cars</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Rental data for map markers - Individual customer tracking
+const customerRentals = [
+    {% for rental in rentals %}
+    {
+        id: {{ rental.id }},
+        car: "{{ rental.brand }} {{ rental.model }}",
+        status: "{{ rental.status }}",
+        approval: "{{ rental.approval_status or 'pending' }}",
+        payment: "{{ rental.payment_status or 'pending' }}",
+        startDate: "{{ rental.start_date }}",
+        endDate: "{{ rental.end_date }}",
+        price: {{ rental.total_price }},
+        amount: {{ rental.amount or rental.total_price * 1.1 }},
+        lat: {{ [28.7041, 28.7041 + loop.index * 0.002] | first }},
+        lng: {{ [77.1025, 77.1025 + loop.index * 0.002] | first }},
+        index: {{ loop.index }}
+    },
+    {% endfor %}
+];
+
+let customerMap;
+
+function initCustomerMap() {
+    // Default center (Delhi, India)
+    const defaultCenter = { lat: 28.7041, lng: 77.1025 };
+    
+    customerMap = new google.maps.Map(document.getElementById('googleMap'), {
+        zoom: 12,
+        center: defaultCenter,
+        mapTypeId: 'roadmap',
+        styles: [
+            {
+                featureType: 'water',
+                stylers: [{ color: '#e0f3f8' }]
+            }
+        ]
+    });
+    
+    // Add markers for each rental with unique styling
+    customerRentals.forEach((rental, index) => {
+        const markerColor = getCustomerMarkerColor(rental.status, rental.payment);
+        const markerLabel = String(index + 1); // Number markers 1, 2, 3...
+        
+        const marker = new google.maps.Marker({
+            position: { lat: rental.lat, lng: rental.lng },
+            map: customerMap,
+            title: `Rental #${rental.id}`,
+            icon: `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`,
+            label: {
+                text: markerLabel,
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 'bold'
+            }
+        });
+        
+        // Info window for marker with detailed rental info
+        const infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="padding: 15px; font-family: Arial, sans-serif; font-size: 13px; max-width: 300px; color: #000;">
+                    <h4 style="margin: 0 0 10px 0; color: #000;">Rental #${rental.id}</h4>
+                    <div style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+                        <p style="margin: 5px 0; color: #000;"><strong>🚗 Car:</strong> ${rental.car}</p>
+                        <p style="margin: 5px 0; color: #000;"><strong>📅 Start:</strong> ${rental.startDate}</p>
+                        <p style="margin: 5px 0; color: #000;"><strong>📅 End:</strong> ${rental.endDate}</p>
+                        <p style="margin: 5px 0; color: #000;"><strong>💰 Price:</strong> ₹${rental.price.toFixed(2)}</p>
+                    </div>
+                    <div style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+                        <p style="margin: 5px 0; color: #000;"><strong>🚗 Rental Status:</strong> <span style="color: ${getStatusColor(rental.status)}">${rental.status.toUpperCase()}</span></p>
+                        <p style="margin: 5px 0; color: #000;"><strong>✅ Approval:</strong> <span style="color: ${getApprovalColor(rental.approval)}">${rental.approval.toUpperCase()}</span></p>
+                        <p style="margin: 5px 0; color: #000;"><strong>💳 Payment:</strong> <span style="color: ${getPaymentColor(rental.payment)}">${rental.payment.toUpperCase()}</span></p>
+                    </div>
+                    <div>
+                        <p style="margin: 5px 0; color: #000;"><strong>💵 Amount Due:</strong> ₹${rental.amount.toFixed(2)}</p>
+                        ${rental.payment !== 'completed' ? '<p style="margin: 5px 0; color: #EA4335;"><strong>⚠️ Payment pending</strong></p>' : '<p style="margin: 5px 0; color: #34A853;"><strong>✓ Payment completed</strong></p>'}
+                    </div>
+                </div>
+            `
+        });
+        
+        // Add click listener to show info
+        marker.addListener('click', () => {
+            // Close all other info windows
+            customerMap.infoWindows = customerMap.infoWindows || [];
+            customerMap.infoWindows.forEach(iw => iw.close());
+            
+            // Open this info window
+            infoWindow.open(customerMap, marker);
+            customerMap.infoWindows.push(infoWindow);
+        });
+        
+        // Auto-center map to include all markers
+        if (index === 0) {
+            const bounds = new google.maps.LatLngBounds();
+            customerRentals.forEach(r => {
+                bounds.extend({ lat: r.lat, lng: r.lng });
+            });
+            customerMap.fitBounds(bounds);
+        }
+    });
+}
+
+function getCustomerMarkerColor(status, payment) {
+    if (status === 'active') return 'blue';
+    if (status === 'completed') return 'green';
+    if (payment === 'completed') return 'green';
+    if (payment !== 'completed') return 'yellow';
+    return 'red';
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'active': '#4285F4',
+        'completed': '#34A853',
+        'rented': '#EA4335'
+    };
+    return colors[status] || '#666';
+}
+
+function getApprovalColor(approval) {
+    const colors = {
+        'approved': '#34A853',
+        'pending': '#FBBC04',
+        'rejected': '#EA4335'
+    };
+    return colors[approval] || '#666';
+}
+
+function getPaymentColor(payment) {
+    const colors = {
+        'completed': '#34A853',
+        'pending': '#FBBC04',
+        'failed': '#EA4335'
+    };
+    return colors[payment] || '#666';
+}
+
+function toggleMapView() {
+    const mapContainer = document.getElementById('mapContainer');
+    if (mapContainer.style.display === 'none') {
+        mapContainer.style.display = 'block';
+        if (!customerMap) {
+            initCustomerMap();
+        } else {
+            // Trigger resize if map was hidden
+            google.maps.event.trigger(customerMap, 'resize');
+        }
+    } else {
+        mapContainer.style.display = 'none';
+    }
+}
+
+// Load Google Maps API when page loads
+window.addEventListener('load', () => {
+    // Maps will be loaded on demand when View Map button is clicked
+});
+</script>
+
+<!-- Load Google Maps API -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}"></script>
+
+{% endblock %}
