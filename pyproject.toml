@@ -1,0 +1,13 @@
+[project]
+name = "car-rental-system"
+version = "1.0.0"
+description = "Car Rental System - Flask Web Application"
+requires-python = ">=3.12"
+dependencies = [
+    "Flask==3.0.0",
+    "reportlab==4.1.0",
+    "Pillow==10.1.0",
+    "Werkzeug==3.0.1",
+    "Flask-Mail==0.9.1",
+    "python-dotenv>=0.21.0",
+]
